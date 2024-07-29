@@ -5,8 +5,8 @@
     path: /tmp/.ansible-hng/tmp
     state: directory
     mode: '0777'
-    owner: root
-    group: root
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
 
 - name: Clone the repository
   git:
@@ -21,13 +21,13 @@
   debug:
     var: git_output
 
-- name: Log git clone stdout
+- name: Logging git clone stdout
   copy:
     content: "{{ git_output.after }}"
     dest: "{{ log_stdout_path }}"
   when: git_output.after is defined and git_output.after != ""
 
-- name: Log git clone stderr
+- name: Logging git clone stderr
   copy:
     content: "{{ git_output.before }}"
     dest: "{{ log_stderr_path }}"

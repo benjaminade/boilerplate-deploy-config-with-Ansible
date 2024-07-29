@@ -11,7 +11,7 @@
   poll: 5
   register: app_run_output
 
-- name: Log application run stdout
+- name: Logging application run stdout
   lineinfile:
     path: "{{ log_stdout_path }}"
     line: "{{ app_run_output.stdout }}"
@@ -19,7 +19,7 @@
     insertafter: EOF
   when: app_run_output.stdout is defined and app_run_output.stdout != ""
 
-- name: Log application run stderr
+- name: Logging application run stderr
   lineinfile:
     path: "{{ log_stderr_path }}"
     line: "{{ app_run_output.stderr }}"

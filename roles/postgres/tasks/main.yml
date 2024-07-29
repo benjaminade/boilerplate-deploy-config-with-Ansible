@@ -9,13 +9,13 @@
     mode: '0600'
   register: pg_cred_output
 
-- name: Log pg_cred_path file creation stdout
+- name: Logging postgres credential path file creation stdout
   copy:
     content: "{{ pg_cred_output.stdout }}"
     dest: "{{ log_stdout_path }}"
   when: pg_cred_output.stdout is defined and pg_cred_output.stdout != ""
 
-- name: Log pg_cred_path file creation stderr
+- name: Logging postgres credential path file creation stderr
   copy:
     content: "{{ pg_cred_output.stderr }}"
     dest: "{{ log_stderr_path }}"
@@ -33,7 +33,7 @@
     dest: "{{ log_stdout_path }}"
   when: install_postgres_output.stdout is defined and install_postgres_output.stdout != ""
 
-- name: Log install PostgreSQL stderr
+- name: Logging install PostgreSQL stderr
   copy:
     content: "{{ install_postgres_output.stderr }}"
     dest: "{{ log_stderr_path }}"
@@ -46,13 +46,13 @@
     enabled: yes
   register: postgres_service_output
 
-- name: Log PostgreSQL service stdout
+- name: Logging PostgreSQL service stdout
   copy:
     content: "{{ postgres_service_output.stdout }}"
     dest: "{{ log_stdout_path }}"
   when: postgres_service_output.stdout is defined and postgres_service_output.stdout != ""
 
-- name: Log PostgreSQL service stderr
+- name: Logging PostgreSQL service stderr
   copy:
     content: "{{ postgres_service_output.stderr }}"
     dest: "{{ log_stderr_path }}"
@@ -65,13 +65,13 @@
     state: present
   register: create_db_output
 
-- name: Log create PostgreSQL database stdout
+- name: Logging create PostgreSQL database stdout
   copy:
     content: "{{ create_db_output.stdout }}"
     dest: "{{ log_stdout_path }}"
   when: create_db_output.stdout is defined and create_db_output.stdout != ""
 
-- name: Log create PostgreSQL database stderr
+- name: Logging create PostgreSQL database stderr
   copy:
     content: "{{ create_db_output.stderr }}"
     dest: "{{ log_stderr_path }}"
@@ -87,13 +87,13 @@
     state: present
   register: create_user_output
 
-- name: Log create PostgreSQL admin user stdout
+- name: Logging create PostgreSQL admin user stdout
   copy:
     content: "{{ create_user_output.stdout }}"
     dest: "{{ log_stdout_path }}"
   when: create_user_output.stdout is defined and create_user_output.stdout != ""
 
-- name: Log create PostgreSQL admin user stderr
+- name: Logging create PostgreSQL admin user stderr
   copy:
     content: "{{ create_user_output.stderr }}"
     dest: "{{ log_stderr_path }}"

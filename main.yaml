@@ -2,7 +2,6 @@
   hosts: hng
   become: yes
   vars:
-    remote_tmp: "/tmp/.ansible-${USER}/tmp"
     git_branch_name: "devops"
     pg_cred_path: "/var/secrets/pg_pw.txt"
     app_port: 3000
@@ -13,7 +12,7 @@
     git_repo_url: "https://github.com/hngprojects/hng_boilerplate_python_fastapi_web.git"
     local_repo_path: "/opt/stage_5b"
     virtual_env: "venv"
-    pg_database_name: "mydatabase"
+    pg_database_name: "ben_database"
     pg_admin_user: "admin"
     pg_admin_password: "password123"
 
