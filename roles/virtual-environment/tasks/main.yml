@@ -1,0 +1,44 @@
+---
+# tasks file for roles/postgres
+- name: Create virtual environment
+  command: python3 -m venv "{{ local_repo_path }}/{{ virtual_env }}"
+  become_user: "{{ deployment_user }}"
+  args:
+    chdir: "{{ local_repo_path }}"
+  register: venv_output
+
+- name: Log virtualenv creation stdout
+  copy:
+    content: "{{ venv_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: venv_output.stdout is defined and venv_output.stdout != ""
+
+- name: Log virtualenv creation stderr
+  copy:
+    content: "{{ venv_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: venv_output.stderr is defined and venv_output.stderr != ""
+
+- name: Activate virtual environment and display its path
+  shell: |
+    . {{ local_repo_path }}/{{ virtual_env }}/bin/activate && echo $VIRTUAL_ENV
+  register: venv_path
+  become_user: "{{ deployment_user }}"
+  args:
+    executable: /bin/bash
+
+- name: Log virtual environment activation stdout
+  copy:
+    content: "{{ venv_path.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: venv_path.stdout is defined and venv_path.stdout != ""
+
+- name: Log virtual environment activation stderr
+  copy:
+    content: "{{ venv_path.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: venv_path.stderr is defined and venv_path.stderr != ""
+
+- name: Print virtual environment path
+  debug:
+    msg: "Virtual environment path: {{ venv_path.stdout }}"

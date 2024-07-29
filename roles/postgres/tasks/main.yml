@@ -1,0 +1,154 @@
+---
+# tasks file for roles/postgres
+- name: Ensure pg_cred_path file exists and has correct permissions
+  file:
+    path: "{{ pg_cred_path }}"
+    state: touch
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
+    mode: '0600'
+  register: pg_cred_output
+
+- name: Log pg_cred_path file creation stdout
+  copy:
+    content: "{{ pg_cred_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: pg_cred_output.stdout is defined and pg_cred_output.stdout != ""
+
+- name: Log pg_cred_path file creation stderr
+  copy:
+    content: "{{ pg_cred_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: pg_cred_output.stderr is defined and pg_cred_output.stderr != ""
+
+- name: Install PostgreSQL
+  apt:
+    name: postgresql
+    state: present
+  register: install_postgres_output
+
+- name: Log install PostgreSQL stdout
+  copy:
+    content: "{{ install_postgres_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: install_postgres_output.stdout is defined and install_postgres_output.stdout != ""
+
+- name: Log install PostgreSQL stderr
+  copy:
+    content: "{{ install_postgres_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: install_postgres_output.stderr is defined and install_postgres_output.stderr != ""
+
+- name: Ensure PostgreSQL service is running
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+  register: postgres_service_output
+
+- name: Log PostgreSQL service stdout
+  copy:
+    content: "{{ postgres_service_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: postgres_service_output.stdout is defined and postgres_service_output.stdout != ""
+
+- name: Log PostgreSQL service stderr
+  copy:
+    content: "{{ postgres_service_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: postgres_service_output.stderr is defined and postgres_service_output.stderr != ""
+
+- name: Create PostgreSQL database and admin user
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ pg_database_name }}"
+    state: present
+  register: create_db_output
+
+- name: Log create PostgreSQL database stdout
+  copy:
+    content: "{{ create_db_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: create_db_output.stdout is defined and create_db_output.stdout != ""
+
+- name: Log create PostgreSQL database stderr
+  copy:
+    content: "{{ create_db_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: create_db_output.stderr is defined and create_db_output.stderr != ""
+
+- name: Create PostgreSQL admin user
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ pg_admin_user }}"
+    password: "{{ pg_admin_password }}"
+    db: "{{ pg_database_name }}"
+    priv: "ALL"
+    state: present
+  register: create_user_output
+
+- name: Log create PostgreSQL admin user stdout
+  copy:
+    content: "{{ create_user_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: create_user_output.stdout is defined and create_user_output.stdout != ""
+
+- name: Log create PostgreSQL admin user stderr
+  copy:
+    content: "{{ create_user_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: create_user_output.stderr is defined and create_user_output.stderr != ""
+
+- name: Save PostgreSQL admin credentials to pg_cred_path
+  copy:
+    content: "postgres://{{ pg_admin_user }}:{{ pg_admin_password }}@localhost:5432/{{ pg_database_name }}"
+    dest: "{{ pg_cred_path }}"
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
+    mode: '0600'
+
+- name: Create dummy table in PostgreSQL database
+  become_user: postgres
+  postgresql_query:
+    db: "{{ pg_database_name }}"
+    query: "CREATE TABLE IF NOT EXISTS dummy_table (column1 VARCHAR(255), column2 VARCHAR(255));"
+
+- name: Create dummy data in PostgreSQL database
+  become_user: postgres
+  postgresql_query:
+    db: "{{ pg_database_name }}"
+    query: "INSERT INTO dummy_table (column1, column2) VALUES ('ThePrimeJnr', 'Idimma');"
+
+
+- name: Copy .env.sample to .env
+  copy:
+    src: "{{ local_repo_path }}/.env.sample"
+    dest: "{{ local_repo_path }}/.env"
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
+    mode: '0644'
+    remote_src: yes
+
+- name: Update .env file with Postgres URL
+  lineinfile:
+    path: "{{ local_repo_path }}/.env"
+    regexp: '^DB_URL='
+    line: "DB_URL=postgresql://{{ pg_admin_user }}:{{ pg_admin_password }}@localhost:5432/{{ pg_database_name }}"
+
+- name: Update .env file with Postgres details
+  lineinfile:
+    path: "{{ local_repo_path }}/.env"
+    regexp: '^DB_NAME='
+    line: "DB_NAME={{ pg_database_name }}"
+
+- name: Update .env file with Postgres user
+  lineinfile:
+    path: "{{ local_repo_path }}/.env"
+    regexp: '^DB_USER='
+    line: "DB_USER={{ pg_admin_user }}"
+
+- name: Update .env file with Postgres password
+  lineinfile:
+    path: "{{ local_repo_path }}/.env"
+    regexp: '^DB_PASSWORD='
+    line: "DB_PASSWORD={{ pg_admin_password }}"

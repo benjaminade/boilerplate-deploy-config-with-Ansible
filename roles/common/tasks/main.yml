@@ -1,0 +1,72 @@
+---
+# tasks file for roles/common
+    - name: Check if sudo group exists
+      command: getent group sudo
+      register: sudo_group
+      ignore_errors: true
+
+    - name: Create sudo group if it doesn't exist
+      group:
+        name: sudo
+        state: present
+      when: sudo_group.rc != 0
+
+    - name: Ensure sudo group has root privileges
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL:ALL) ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create deployment user
+      user:
+        name: "{{ deployment_user }}"
+        groups: sudo
+        append: yes
+        state: present
+        shell: /bin/bash
+
+    - name: Grant deployment user sudo privileges without password
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^{{ deployment_user }}'
+        line: '{{ deployment_user }} ALL=(ALL) NOPASSWD:ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create /var/log/stage_5b directory
+      file:
+        path: /var/log/stage_5b
+        state: directory
+        owner: "{{ deployment_user }}"
+        group: "{{ deployment_user }}"
+        mode: '0755'
+
+    - name: Ensure log files exist
+      file:
+        path: "{{ item }}"
+        state: touch
+        owner: "{{ deployment_user }}"
+        group: "{{ deployment_user }}"
+        mode: '0644'
+      with_items:
+        - "{{ log_stderr_path }}"
+        - "{{ log_stdout_path }}"
+
+    - name: Create local repository path
+      file:
+        path: "{{ local_repo_path }}"
+        state: directory
+        owner: "{{ deployment_user }}"
+        group: "{{ deployment_user }}"
+        mode: '0755'
+
+    - name: Create "/var/secrets"
+      file:
+        path: /var/secrets
+        state: directory
+        owner: hng
+        group: hng
+        mode: '0755'
+

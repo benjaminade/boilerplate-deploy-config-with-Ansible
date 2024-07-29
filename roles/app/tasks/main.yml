@@ -1,0 +1,31 @@
+---
+# tasks file for roles/app
+- name: Run the FastAPI application server
+  shell: |
+    . {{ local_repo_path }}/{{ virtual_env }}/bin/activate
+    nohup uvicorn main:app --host 0.0.0.0 --port "{{ app_port }}" > "{{ log_stdout_path }}" 2> "{{ log_stderr_path }}" &
+  args:
+    chdir: "{{ local_repo_path }}"
+  become_user: "{{ deployment_user }}"
+  async: 0
+  poll: 5
+  register: app_run_output
+
+- name: Log application run stdout
+  lineinfile:
+    path: "{{ log_stdout_path }}"
+    line: "{{ app_run_output.stdout }}"
+    create: yes
+    insertafter: EOF
+  when: app_run_output.stdout is defined and app_run_output.stdout != ""
+
+- name: Log application run stderr
+  lineinfile:
+    path: "{{ log_stderr_path }}"
+    line: "{{ app_run_output.stderr }}"
+    create: yes
+    insertafter: EOF
+  when: app_run_output.stderr is defined and app_run_output.stderr != ""
+
+
+

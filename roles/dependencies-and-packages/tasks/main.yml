@@ -1,0 +1,34 @@
+---
+# tasks file for roles/nginx
+- name: Ensure python3.12-venv is installed
+  ansible.builtin.apt:
+    name: python3.12-venv
+    state: present
+    update_cache: yes
+
+    # Highlighted update starts here
+- name: Ensure python3-psycopg2 is installed
+  ansible.builtin.apt:
+    name: python3-psycopg2
+    state: present
+    update_cache: yes
+    # Highlighted update ends here
+
+- name: Install dependencies from requirements.txt
+  pip:
+    requirements: "{{ local_repo_path }}/requirements.txt"
+    virtualenv: "{{ local_repo_path }}/{{ virtual_env }}"
+  become_user: "{{ deployment_user }}"
+  register: pip_output
+
+- name: Log pip install stdout
+  copy:
+    content: "{{ pip_output.stdout }}"
+    dest: "{{ log_stdout_path }}"
+  when: pip_output.stdout is defined and pip_output.stdout != ""
+
+- name: Log pip install stderr
+  copy:
+    content: "{{ pip_output.stderr }}"
+    dest: "{{ log_stderr_path }}"
+  when: pip_output.stderr is defined and pip_output.stderr != ""

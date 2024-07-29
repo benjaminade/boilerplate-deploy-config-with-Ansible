@@ -1,0 +1,11 @@
+# Ignore the .git directory
+.git/
+
+# Ignore the pr_request file
+pr-request.pem
+
+# Ignore any other files or directories you want to exclude
+node_modules/
+.env
+*.log
+*.ini
