@@ -16,10 +16,8 @@
     force: yes
   become_user: "{{ deployment_user }}"
   register: git_output
-
-- name: Debug git_output
-  debug:
-    var: git_output
+  
+  
 
 - name: Logging git clone stdout
   copy:

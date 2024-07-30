@@ -2,16 +2,32 @@
 # tasks file for roles/nginx
 
 - name: Ensure python3.12-venv is installed
-  ansible.builtin.apt:
-    name: python3.12-venv
-    state: present
-    update_cache: yes
+  shell: "sudo apt-get update && sudo apt-get install -y python3.12-venv"
+  register: python3_venv_output
+  ignore_errors: yes
 
-
-# Highlighted update starts here
 - name: Ensure python3-psycopg2 is installed
-  ansible.builtin.apt:
-    name: python3-psycopg2
-    state: present
-    update_cache: yes
-    
+  shell: "sudo apt-get update && sudo apt-get install -y python3-psycopg2"
+  register: python3_psycopg2_output
+  ignore_errors: yes
+
+   
+- name: Logging the stderr
+  copy:
+    content: |
+      {{ python3_venv_output.stderr | default('All clean, no errors') }}
+      {{ python3_psycopg2_output.stderr | default('All clean. no errors') }}
+    dest: "{{ log_stderr_path }}"
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
+    mode: '0644'
+
+- name: Logging the stdout 
+  copy:
+    content: |
+      {{ python3_venv_output.stdout }}
+      {{ python3_psycopg2_output.stdout }}
+    dest: "{{ log_stdout_path }}"
+    owner: "{{ deployment_user }}"
+    group: "{{ deployment_user }}"
+    mode: '0644'

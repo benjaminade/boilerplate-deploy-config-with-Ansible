@@ -58,7 +58,7 @@
     dest: "{{ log_stderr_path }}"
   when: postgres_service_output.stderr is defined and postgres_service_output.stderr != ""
 
-- name: Create PostgreSQL database and admin user
+- name: Create PostgreSQL database 
   become_user: postgres
   community.postgresql.postgresql_db:
     name: "{{ pg_database_name }}"
